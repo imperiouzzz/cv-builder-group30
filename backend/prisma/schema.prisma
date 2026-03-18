@@ -1,0 +1,167 @@
+// This is the Prisma schema for CV Builder — Group 30 KNUST
+// Run:  npx prisma migrate dev --name init
+// Seed: npm run db:seed
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Users ────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cvs       CV[]
+
+  @@map("users")
+}
+
+// ── CV document ──────────────────────────────────────────────
+model CV {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String   @default("My CV")
+  template    String   @default("classic")
+  font        String   @default("sans")
+  atsScore    Int      @default(0)
+
+  fullName    String   @default("")
+  jobTitle    String   @default("")
+  email       String   @default("")
+  phone       String   @default("")
+  linkedin    String   @default("")
+  github      String   @default("")
+  summary     String   @default("") @db.Text
+
+  sectionOrder Json    @default("[\"summary\",\"education\",\"work\",\"projects\",\"volunteering\",\"skills\",\"references\"]")
+
+  education       Education[]
+  workExp         WorkExperience[]
+  skills          Skill[]
+  projects        Project[]
+  volunteering    Volunteering[]
+  references      Reference[]
+  customSections  CustomSection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cvs")
+}
+
+// ── Education ────────────────────────────────────────────────
+model Education {
+  id           String @id @default(uuid())
+  cvId         String
+  cv           CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  degree       String @default("")
+  institution  String @default("")
+  location     String @default("")
+  startDate    String @default("")
+  endDate      String @default("")
+  gpa          String @default("")
+  achievements String @default("") @db.Text
+  sortOrder    Int    @default(0)
+
+  @@map("education")
+}
+
+// ── Work Experience ──────────────────────────────────────────
+model WorkExperience {
+  id          String @id @default(uuid())
+  cvId        String
+  cv          CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  title       String @default("")
+  company     String @default("")
+  location    String @default("")
+  startDate   String @default("")
+  endDate     String @default("")
+  description String @default("") @db.Text
+  sortOrder   Int    @default(0)
+
+  @@map("work_experience")
+}
+
+// ── Skills ───────────────────────────────────────────────────
+model Skill {
+  id        String @id @default(uuid())
+  cvId      String
+  cv        CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  name      String
+  category  String @default("technical")
+  sortOrder Int    @default(0)
+
+  @@map("skills")
+}
+
+// ── Projects ─────────────────────────────────────────────────
+model Project {
+  id          String @id @default(uuid())
+  cvId        String
+  cv          CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  name        String @default("")
+  tech        String @default("")
+  period      String @default("")
+  description String @default("") @db.Text
+  link        String @default("")
+  sortOrder   Int    @default(0)
+
+  @@map("projects")
+}
+
+// ── Volunteering ─────────────────────────────────────────────
+model Volunteering {
+  id        String @id @default(uuid())
+  cvId      String
+  cv        CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  role      String @default("")
+  org       String @default("")
+  period    String @default("")
+  desc      String @default("") @db.Text
+  sortOrder Int    @default(0)
+
+  @@map("volunteering")
+}
+
+// ── References ───────────────────────────────────────────────
+model Reference {
+  id        String @id @default(uuid())
+  cvId      String
+  cv        CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  name      String @default("")
+  title     String @default("")
+  org       String @default("")
+  email     String @default("")
+  phone     String @default("")
+  sortOrder Int    @default(0)
+
+  @@map("references")
+}
+
+// ── Custom Sections ──────────────────────────────────────────
+model CustomSection {
+  id           String @id @default(uuid())
+  cvId         String
+  cv           CV     @relation(fields: [cvId], references: [id], onDelete: Cascade)
+
+  sectionTitle String @default("")
+  entries      String @default("") @db.Text
+  sortOrder    Int    @default(0)
+
+  @@map("custom_sections")
+}

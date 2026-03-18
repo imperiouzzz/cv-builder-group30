@@ -1,0 +1,122 @@
+name: CI — CV Builder Group 30
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ── Backend tests ────────────────────────────────────────────
+  backend:
+    name: Backend — Test & Lint
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER:     cvbuilder
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB:       cvbuilder_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://cvbuilder:testpassword@localhost:5432/cvbuilder_test
+
+      - name: Run DB migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://cvbuilder:testpassword@localhost:5432/cvbuilder_test
+
+      - name: Run unit tests
+        run: npm test -- --testPathPattern=tests/unit
+        env:
+          DATABASE_URL: postgresql://cvbuilder:testpassword@localhost:5432/cvbuilder_test
+          JWT_SECRET: ci-test-secret-key
+          NODE_ENV: test
+
+      - name: Run integration tests
+        run: npm test -- --testPathPattern=tests/integration
+        env:
+          DATABASE_URL: postgresql://cvbuilder:testpassword@localhost:5432/cvbuilder_test
+          JWT_SECRET: ci-test-secret-key
+          NODE_ENV: test
+          FRONTEND_URL: http://localhost:3000
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+
+  # ── Frontend lint & type check ───────────────────────────────
+  frontend:
+    name: Frontend — Lint & Type Check
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Build check
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000/api
+
+  # ── Notify on success ────────────────────────────────────────
+  notify:
+    name: Notify — CI Complete
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: success()
+    steps:
+      - name: CI passed
+        run: echo "✅ All checks passed — safe to merge."

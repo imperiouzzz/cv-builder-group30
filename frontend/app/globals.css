@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --red:         #E53E3E;
+  --red-dark:    #C53030;
+  --red-light:   #FFF5F5;
+  --dark:        #1A1A2E;
+  --panel:       #16213E;
+  --text:        #2D3748;
+  --muted:       #718096;
+  --border:      #E2E8F0;
+  --success:     #38A169;
+  --warning:     #D69E2E;
+  --preview-bg:  #F7FAFC;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  background: var(--dark);
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+
+@layer components {
+  .btn-primary {
+    @apply px-5 py-2 rounded-lg text-white font-semibold text-sm transition-colors cursor-pointer border-none;
+    background: var(--red);
+  }
+  .btn-primary:hover { background: var(--red-dark); }
+
+  .btn-secondary {
+    @apply px-5 py-2 rounded-lg font-semibold text-sm transition-colors cursor-pointer;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { background: var(--preview-bg); }
+
+  .input-field {
+    @apply w-full px-3 py-2 rounded-md text-sm outline-none transition-all;
+    border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: white;
+  }
+  .input-field:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.08);
+  }
+
+  .form-label {
+    @apply block text-xs font-semibold mb-1;
+    color: var(--text);
+  }
+
+  .card {
+    @apply rounded-xl p-4;
+    background: white;
+    border: 1px solid var(--border);
+  }
+}
+
+@media print {
+  #sidebar, #form-panel, #preview-topbar { display: none !important; }
+  #preview-panel { width: 100% !important; border: none !important; }
+  #cv-preview { box-shadow: none !important; font-size: 11px !important; }
+}
