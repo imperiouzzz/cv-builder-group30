@@ -12,6 +12,7 @@ const pdfRoutes   = require('./routes/pdf.routes');
 const { errorHandler, notFound } = require('./middleware/error.middleware');
 
 const app  = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
 
 // ── Security & logging ──────────────────────────────────────
